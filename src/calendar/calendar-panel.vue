@@ -282,7 +282,7 @@ export default {
     },
     handleSelectYear(year) {
       if (this.type === 'year') {
-        const date = this.getCellDate(year, 'year');
+        const date = this.getYearCellDate();
         this.emitDate(date, 'year');
       } else {
         const nextCalendar = setYear(this.innerCalendar, year);
@@ -296,7 +296,7 @@ export default {
     },
     handleSelectMonth(month) {
       if (this.type === 'month') {
-        const date = this.getCellDate(month, 'month');
+        const date = this.getMonthCellDate(month);
         this.emitDate(date, 'month');
       } else {
         const nextCalendar = setMonth(this.innerCalendar, month);
@@ -308,21 +308,16 @@ export default {
         }
       }
     },
-    handleSelectDate(day) {
-      const date = this.getCellDate(day, 'date');
+    handleSelectDate(date) {
       this.emitDate(date, this.type === 'week' ? 'week' : 'date');
     },
-    getCellDate(value, type) {
-      if (type === 'year') {
-        return createDate(value, 0);
-      }
-      if (type === 'month') {
-        return createDate(this.calendarYear, value);
-      }
-      return createDate(this.calendarYear, this.calendarMonth, value);
+    getMonthCellDate(month) {
+      return createDate(this.calendarYear, month);
     },
-    getDateClasses(day) {
-      const cellDate = this.getCellDate(day, 'date');
+    getYearCellDate(year) {
+      return createDate(year, 0);
+    },
+    getDateClasses(cellDate) {
       const notCurrentMonth = cellDate.getMonth() !== this.calendarMonth;
       const classes = [];
       if (cellDate.getTime() === new Date().setHours(0, 0, 0, 0)) {
@@ -342,7 +337,7 @@ export default {
         return this.calendarMonth === month ? 'active' : '';
       }
       const classes = [];
-      const cellDate = this.getCellDate(month, 'month');
+      const cellDate = this.getMonthCellDate();
       classes.push(this.getStateClass(cellDate));
       return classes.concat(this.getClasses(cellDate, this.innerValue, classes.join(' ')));
     },
@@ -351,7 +346,7 @@ export default {
         return this.calendarYear === year ? 'active' : '';
       }
       const classes = [];
-      const cellDate = this.getCellDate(year, 'year');
+      const cellDate = this.getYearCellDate();
       classes.push(this.getStateClass(cellDate));
       return classes.concat(this.getClasses(cellDate, this.innerValue, classes.join(' ')));
     },
@@ -366,8 +361,8 @@ export default {
     },
     getWeekState(row) {
       if (this.type !== 'week') return '';
-      const start = this.getCellDate(row[0].day, 'date').getTime();
-      const end = this.getCellDate(row[6].day, 'date').getTime();
+      const start = row[0].getTime();
+      const end = row[6].getTime();
       const active = this.innerValue.some(v => {
         const time = v.getTime();
         return time >= start && time <= end;

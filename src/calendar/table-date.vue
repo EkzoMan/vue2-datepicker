@@ -13,17 +13,17 @@
         :class="[`${prefixClass}-date-row`, getRowClasses(row)]"
       >
         <td v-if="showWeekNumber" :class="`${prefixClass}-week-number`">
-          {{ getWeekNumber(row[0].day) }}
+          {{ getWeekNumber(row[0]) }}
         </td>
         <td
           v-for="(cell, j) in row"
           :key="j"
-          :data-day="cell.day"
+          :data-date="cell.getTime()"
           class="cell"
-          :class="getCellClasses(cell.day)"
-          :title="getCellTitle(cell.day)"
+          :class="getCellClasses(cell)"
+          :title="getCellTitle(cell)"
         >
-          <div>{{ cell.text }}</div>
+          <div>{{ cell.getDate() }}</div>
         </td>
       </tr>
     </tbody>
@@ -33,7 +33,7 @@
 <script>
 import { getWeek, format } from 'date-format-parse';
 import { chunk } from '../util/base';
-import { createDate } from '../util/date';
+import { getCalendar } from '../util/date';
 import { getLocaleFieldValue } from '../locale';
 
 export default {
@@ -92,34 +92,11 @@ export default {
       return days.concat(days).slice(this.firstDayOfWeek, this.firstDayOfWeek + 7);
     },
     dates() {
-      const arr = [];
-      const { firstDayOfWeek } = this;
-      const year = this.calendarYear;
-      const month = this.calendarMonth;
-
-      // change to the last day of the last month
-      const calendar = createDate(year, month, 0);
-      const lastDayInLastMonth = calendar.getDate();
-      // getDay() 0 is Sunday, 1 is Monday
-      const firstDayInLastMonth =
-        lastDayInLastMonth - ((calendar.getDay() + 7 - firstDayOfWeek) % 7);
-      for (let i = firstDayInLastMonth; i <= lastDayInLastMonth; i++) {
-        const day = i - lastDayInLastMonth;
-        arr.push({ day, text: i });
-      }
-      // change to the last day of the current month
-      calendar.setMonth(month + 1, 0);
-      const lastDayInCurrentMonth = calendar.getDate();
-      for (let i = 1; i <= lastDayInCurrentMonth; i++) {
-        arr.push({ day: i, text: i });
-      }
-
-      const lastMonthLength = lastDayInLastMonth - firstDayInLastMonth + 1;
-      const nextMonthLength = 6 * 7 - lastMonthLength - lastDayInCurrentMonth;
-      for (let i = 1; i <= nextMonthLength; i++) {
-        arr.push({ day: lastDayInCurrentMonth + i, text: i });
-      }
-
+      const arr = getCalendar({
+        firstDayOfWeek: this.firstDayOfWeek,
+        year: this.calendarYear,
+        month: this.calendarMonth,
+      });
       return chunk(arr, 7);
     },
   },
@@ -132,22 +109,16 @@ export default {
       if (target.tagName === 'DIV') {
         target = target.parentNode;
       }
-      const day = target.getAttribute('data-day');
-      if (day) {
-        this.$emit('select', parseInt(day, 10));
+      const date = target.getAttribute('data-date');
+      if (date) {
+        this.$emit('select', new Date(parseInt(date, 10)));
       }
     },
-    getCellTitle(day) {
-      const year = this.calendarYear;
-      const month = this.calendarMonth;
+    getCellTitle(date) {
       const fmt = this.titleFormat;
-      const date = createDate(year, month, day);
       return this.formatDate(date, fmt);
     },
-    getWeekNumber(day) {
-      const year = this.calendarYear;
-      const month = this.calendarMonth;
-      const date = createDate(year, month, day);
+    getWeekNumber(date) {
       return this.getWeek(date, this.translateFn('formatLocale'));
     },
   },

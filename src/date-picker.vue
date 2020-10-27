@@ -120,8 +120,8 @@
 import { parse, format, getWeek } from 'date-format-parse';
 import { isValidDate, isValidRangeDate, isValidDates } from './util/date';
 import { pick, isObject, mergeDeep } from './util/base';
-import { getLocale, getLocaleFieldValue } from './locale';
-import Popup from './popup';
+import { getLocale } from './locale';
+import Popup from './popup.vue';
 import IconCalendar from './icon/icon-calendar';
 import IconClose from './icon/icon-close';
 import CalendarPanel from './calendar/calendar-panel';
@@ -561,9 +561,6 @@ export default {
     },
     hasSlot(name) {
       return !!(this.$slots[name] || this.$scopedSlots[name]);
-    },
-    getLocaleFieldValue(path) {
-      return getLocaleFieldValue(path, this.locale);
     },
   },
 };
