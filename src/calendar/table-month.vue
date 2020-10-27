@@ -16,13 +16,13 @@
 
 <script>
 import { chunk } from '../util/base';
-import { getLocaleFieldValue } from '../locale';
+import { getLocale } from '../locale';
 
 export default {
   name: 'TableMonth',
   inject: {
-    translateFn: {
-      default: () => getLocaleFieldValue,
+    locale: {
+      default: getLocale,
     },
     prefixClass: {
       default: 'mx',
@@ -38,8 +38,8 @@ export default {
   },
   computed: {
     months() {
-      const monthsLocale =
-        this.translateFn('months') || this.translateFn('formatLocale.monthsShort');
+      const monthsLocale = this.locale.months || this.locale.formatLocale.monthsShort;
+
       const months = monthsLocale.map((text, month) => {
         return { text, month };
       });

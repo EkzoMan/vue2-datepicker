@@ -113,7 +113,7 @@ import { getValidDate, isValidDate, createDate } from '../util/date';
 import TableDate from './table-date';
 import TableMonth from './table-month';
 import TableYear from './table-year';
-import { getLocaleFieldValue } from '../locale';
+import { getLocale } from '../locale';
 import emitter from '../mixin/emitter';
 
 export default {
@@ -125,8 +125,8 @@ export default {
   },
   mixins: [emitter],
   inject: {
-    translateFn: {
-      default: () => getLocaleFieldValue,
+    locale: {
+      default: getLocale,
     },
     prefixClass: {
       default: 'mx',
@@ -207,9 +207,7 @@ export default {
       return this.panel === 'date';
     },
     dateHeader() {
-      const monthBeforeYear = this.translateFn('monthBeforeYear');
-      const yearFormat = this.translateFn('yearFormat');
-      const monthFormat = this.translateFn('monthFormat') || 'MMM';
+      const { yearFormat, monthBeforeYear, monthFormat = 'MMM' } = this.locale;
       const yearLabel = {
         panel: 'year',
         label: this.formatDate(this.innerCalendar, yearFormat),
@@ -235,7 +233,7 @@ export default {
   },
   methods: {
     formatDate(date, fmt) {
-      return format(date, fmt, { locale: this.translateFn('formatLocale') });
+      return format(date, fmt, { locale: this.locale.formatLocale });
     },
     initCalendar() {
       let calendarDate = this.calendar;

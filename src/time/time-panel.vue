@@ -41,14 +41,14 @@ import { format } from 'date-format-parse';
 import { getValidDate } from '../util/date';
 import ListColumns from './list-columns';
 import ListOptions from './list-options';
-import { getLocaleFieldValue } from '../locale';
+import { getLocale } from '../locale';
 
 export default {
   name: 'TimePanel',
   components: { ListColumns, ListOptions },
   inject: {
-    translateFn: {
-      default: () => getLocaleFieldValue,
+    locale: {
+      default: getLocale,
     },
     prefixClass: {
       default: 'mx',
@@ -149,7 +149,7 @@ export default {
   },
   methods: {
     formatDate(date, fmt) {
-      return format(date, fmt, { locale: this.translateFn('formatLocale') });
+      return format(date, fmt, { locale: this.locale.formatLocale });
     },
     isDisabled(date) {
       return this.disabledTime(new Date(date));

@@ -1,46 +1,93 @@
 <template>
-  <table :class="`${prefixClass}-table ${prefixClass}-table-date`">
-    <thead>
-      <tr>
-        <th v-if="showWeekNumber" :class="`${prefixClass}-week-number-header`"></th>
-        <th v-for="day in days" :key="day">{{ day }}</th>
-      </tr>
-    </thead>
-    <tbody @click="handleCellClick">
-      <tr
-        v-for="(row, i) in dates"
-        :key="i"
-        :class="[`${prefixClass}-date-row`, getRowClasses(row)]"
+  <div>
+    <div :class="`${prefixClass}-calendar-header`">
+      <button
+        type="button"
+        :class="`${prefixClass}-btn ${prefixClass}-btn-text ${prefixClass}-btn-icon-double-left`"
+        @click="handleIconDoubleLeftClick"
       >
-        <td v-if="showWeekNumber" :class="`${prefixClass}-week-number`">
-          {{ getWeekNumber(row[0]) }}
-        </td>
-        <td
-          v-for="(cell, j) in row"
-          :key="j"
-          :data-date="cell.getTime()"
-          class="cell"
-          :class="getCellClasses(cell)"
-          :title="getCellTitle(cell)"
+        <i :class="`${prefixClass}-icon-double-left`"></i>
+      </button>
+      <button
+        type="button"
+        :class="`${prefixClass}-btn ${prefixClass}-btn-text ${prefixClass}-btn-icon-left`"
+        @click="handleIconLeftClick"
+      >
+        <i :class="`${prefixClass}-icon-left`"></i>
+      </button>
+      <button
+        type="button"
+        :class="`${prefixClass}-btn ${prefixClass}-btn-text ${prefixClass}-btn-icon-double-right`"
+        @click="handleIconDoubleRightClick"
+      >
+        <i :class="`${prefixClass}-icon-double-right`"></i>
+      </button>
+      <button
+        type="button"
+        :class="`${prefixClass}-btn ${prefixClass}-btn-text ${prefixClass}-btn-icon-right`"
+        @click="handleIconRightClick"
+      >
+        <i :class="`${prefixClass}-icon-right`"></i>
+      </button>
+      <span :class="`${prefixClass}-calendar-header-label`">
+        <button
+          v-for="item in yearMonth"
+          :key="item.panel"
+          type="button"
+          :class="
+            `${prefixClass}-btn ${prefixClass}-btn-text ${prefixClass}-btn-current-${item.panel}`
+          "
+          @click="handelPanelChange(item.panel)"
         >
-          <div>{{ cell.getDate() }}</div>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+          {{ item.label }}
+        </button>
+      </span>
+    </div>
+    <div :class="`${prefixClass}-calendar-content`">
+      <table :class="`${prefixClass}-table ${prefixClass}-table-date`">
+        <thead>
+          <tr>
+            <th v-if="showWeekNumber" :class="`${prefixClass}-week-number-header`"></th>
+            <th v-for="day in days" :key="day">{{ day }}</th>
+          </tr>
+        </thead>
+        <tbody @click="handleCellClick">
+          <tr
+            v-for="(row, i) in dates"
+            :key="i"
+            :class="[`${prefixClass}-date-row`, getRowClasses(row)]"
+          >
+            <td v-if="showWeekNumber" :class="`${prefixClass}-week-number`">
+              {{ getWeekNumber(row[0]) }}
+            </td>
+            <td
+              v-for="(cell, j) in row"
+              :key="j"
+              :data-date="cell.getTime()"
+              class="cell"
+              :class="getCellClasses(cell)"
+              :title="getCellTitle(cell)"
+            >
+              <div>{{ cell.getDate() }}</div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 </template>
 
 <script>
 import { getWeek, format } from 'date-format-parse';
 import { chunk } from '../util/base';
 import { getCalendar } from '../util/date';
-import { getLocaleFieldValue } from '../locale';
+import { getLocale } from '../locale';
 
 export default {
   name: 'TableDate',
   inject: {
-    translateFn: {
-      default: () => getLocaleFieldValue,
+    locale: {
+      default: getLocale,
     },
     getWeek: {
       default: () => getWeek,
@@ -84,11 +131,23 @@ export default {
     },
   },
   computed: {
+    yearMonth() {
+      const { yearFormat, monthBeforeYear, monthFormat = 'MMM' } = this.locale;
+      const yearLabel = {
+        panel: 'year',
+        label: this.formatDate(this.innerCalendar, yearFormat),
+      };
+      const monthLabel = {
+        panel: 'month',
+        label: this.formatDate(this.innerCalendar, monthFormat),
+      };
+      return monthBeforeYear ? [monthLabel, yearLabel] : [yearLabel, monthLabel];
+    },
     firstDayOfWeek() {
-      return this.translateFn('formatLocale.firstDayOfWeek') || 0;
+      return this.locale.formatLocale.firstDayOfWeek || 0;
     },
     days() {
-      const days = this.translateFn('days') || this.translateFn('formatLocale.weekdaysMin');
+      const days = this.locale.days || this.locale.formatLocale.weekdaysMin;
       return days.concat(days).slice(this.firstDayOfWeek, this.firstDayOfWeek + 7);
     },
     dates() {
@@ -102,8 +161,9 @@ export default {
   },
   methods: {
     formatDate(date, fmt) {
-      return format(date, fmt, { locale: this.translateFn('formatLocale') });
+      return format(date, fmt, { locale: this.locale.formatLocale });
     },
+    handlePanelChange() {},
     handleCellClick(evt) {
       let { target } = evt;
       if (target.tagName === 'DIV') {
@@ -119,7 +179,7 @@ export default {
       return this.formatDate(date, fmt);
     },
     getWeekNumber(date) {
-      return this.getWeek(date, this.translateFn('formatLocale'));
+      return this.getWeek(date, this.locale.formatLocale);
     },
   },
 };

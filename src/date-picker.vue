@@ -151,7 +151,7 @@ export default {
   },
   provide() {
     return {
-      translateFn: this.getLocaleFieldValue,
+      locale: this.locale,
       getWeek: this.getWeek,
       prefixClass: this.prefixClass,
     };
