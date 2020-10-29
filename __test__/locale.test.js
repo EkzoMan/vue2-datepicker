@@ -1,5 +1,6 @@
 import { mount } from '@vue/test-utils';
-import DatePicker from '../src/date-picker.vue';
+import DatePicker from '../src/date-picker';
+import Calendar from '../src/calendar/calendar-panel';
 import '../src/locale/zh-cn';
 
 let wrapper;
@@ -30,14 +31,18 @@ describe('Locale', () => {
       },
     });
     expect(wrapper.find('.mx-table-date th').text()).toBe('Su');
-    expect(wrapper.find('.mx-table-month td').text()).toBe('Jan');
-    expect(wrapper.find('.mx-btn-current-month').text()).toBe('Oct');
     expect(wrapper.find('.mx-table-date .active').element.title).toBe('Oct 10, 2019');
+    expect(wrapper.find('.mx-btn-current-month').text()).toBe('Oct');
+    wrapper.find(Calendar).setData({ panel: 'month' });
+    // expect(wrapper.vm.panel).toBe('month');
+    expect(wrapper.find('.mx-table-month td').text()).toBe('Jan');
     wrapper.setProps({ lang: 'zh-cn' });
+    wrapper.find(Calendar).setData({ panel: 'date' });
     expect(wrapper.find('.mx-table-date th').text()).toBe('一');
-    expect(wrapper.find('.mx-table-month td').text()).toBe('1月');
-    expect(wrapper.find('.mx-btn-current-month').text()).toBe('10月');
     expect(wrapper.find('.mx-table-date .active').element.title).toBe('10月 10, 2019');
+    expect(wrapper.find('.mx-btn-current-month').text()).toBe('10月');
+    wrapper.find(Calendar).setData({ panel: 'month' });
+    expect(wrapper.find('.mx-table-month td').text()).toBe('1月');
   });
 
   it('prop: lang - object', () => {

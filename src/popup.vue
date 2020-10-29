@@ -1,5 +1,5 @@
 <template>
-  <transition :name="`{${prefixClass}-zoom-in-down}`">
+  <transition :name="`${prefixClass}-zoom-in-down`">
     <div
       v-if="visible"
       :class="`${prefixClass}-datepicker-main ${prefixClass}-datepicker-popup`"

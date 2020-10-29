@@ -1,45 +1,69 @@
 <template>
-  <table :class="`${prefixClass}-table ${prefixClass}-table-month`" @click="handleClick">
-    <tr v-for="(row, i) in months" :key="i">
-      <td
-        v-for="(cell, j) in row"
-        :key="j"
-        :data-month="cell.month"
-        class="cell"
-        :class="getCellClasses(cell.month)"
-      >
-        <div>{{ cell.text }}</div>
-      </td>
-    </tr>
-  </table>
+  <div :class="`${prefixClass}-calendar ${prefixClass}-calendar-panel-month`">
+    <div :class="`${prefixClass}-calendar-header`">
+      <icon-button type="double-left" @click="handleIconDoubleLeftClick"></icon-button>
+      <icon-button type="double-right" @click="handleIconDoubleRightClick"></icon-button>
+      <span :class="`${prefixClass}-calendar-header-label`">
+        <button
+          type="button"
+          :class="`${prefixClass}-btn ${prefixClass}-btn-text`"
+          @click="handlePanelChange"
+        >
+          {{ calendarYear }}
+        </button>
+      </span>
+    </div>
+    <div :class="`${prefixClass}-calendar-content`">
+      <table :class="`${prefixClass}-table ${prefixClass}-table-month`" @click="handleClick">
+        <tr v-for="(row, i) in months" :key="i">
+          <td
+            v-for="(cell, j) in row"
+            :key="j"
+            :data-month="cell.month"
+            class="cell"
+            :class="getCellClasses(cell.month)"
+          >
+            <div>{{ cell.text }}</div>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </div>
 </template>
 
 <script>
 import { chunk } from '../util/base';
+import IconButton from './icon-button';
 import { getLocale } from '../locale';
 
 export default {
   name: 'TableMonth',
+  components: { IconButton },
   inject: {
-    locale: {
-      default: getLocale,
+    getLocale: {
+      default: () => getLocale,
     },
     prefixClass: {
       default: 'mx',
     },
   },
   props: {
+    calendar: {
+      type: Date,
+      default: () => new Date(),
+    },
     getCellClasses: {
       type: Function,
-      default: () => {
-        return [];
-      },
+      default: () => [],
     },
   },
   computed: {
+    calendarYear() {
+      return this.calendar.getFullYear();
+    },
     months() {
-      const monthsLocale = this.locale.months || this.locale.formatLocale.monthsShort;
-
+      const locale = this.getLocale();
+      const monthsLocale = locale.months || locale.formatLocale.monthsShort;
       const months = monthsLocale.map((text, month) => {
         return { text, month };
       });
@@ -47,6 +71,15 @@ export default {
     },
   },
   methods: {
+    handleIconDoubleLeftClick() {
+      this.$emit('last-year');
+    },
+    handleIconDoubleRightClick() {
+      this.$emit('next-year');
+    },
+    handlePanelChange() {
+      this.$emit('change-panel', 'year');
+    },
     handleClick(evt) {
       let { target } = evt;
       if (target.tagName === 'DIV') {

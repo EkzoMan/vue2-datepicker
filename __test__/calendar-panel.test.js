@@ -64,8 +64,23 @@ describe('CalendarPanel', () => {
     expect(td.classes()).toContain('active');
   });
 
+  it('feat: panel change', () => {
+    wrapper = mount(CalendarPanel);
+    const { vm } = wrapper;
+    wrapper.find('.mx-btn-current-year').trigger('click');
+    expect(vm.panel).toBe('year');
+    wrapper.find('.mx-table-year td > div').trigger('click');
+    expect(vm.panel).toBe('month');
+    wrapper.find('.mx-table-month td > div').trigger('click');
+    expect(vm.panel).toBe('date');
+    wrapper.find('.mx-btn-current-month').trigger('click');
+    expect(vm.panel).toBe('month');
+    wrapper.find('.mx-calendar-header-label > button').trigger('click');
+    expect(vm.panel).toBe('year');
+  });
+
   it('feat: click prev/next month', () => {
-    wrapper = shallowMount(CalendarPanel);
+    wrapper = mount(CalendarPanel);
 
     const nextBtn = wrapper.find('.mx-btn-icon-right');
     const lastBtn = wrapper.find('.mx-btn-icon-left');
@@ -102,33 +117,44 @@ describe('CalendarPanel', () => {
     }
   });
 
-  it('feat: click prev/next year', () => {
-    wrapper = shallowMount(CalendarPanel, {
+  ['date', 'month'].forEach(type => {
+    it(`feat: click prev/next year in ${type} panel`, () => {
+      wrapper = mount(CalendarPanel, {
+        propsData: {
+          value: new Date(2018, 4, 5),
+          defaultPanel: type,
+        },
+      });
+      const nextBtn = wrapper.find('.mx-btn-icon-double-right');
+      const lastBtn = wrapper.find('.mx-btn-icon-double-left');
+      const { vm } = wrapper;
+      const oldYear = vm.calendarYear;
+      expect(oldYear).toBe(2018);
+      nextBtn.trigger('click');
+      let newYear = vm.calendarYear;
+      expect(newYear).toBe(2019);
+      lastBtn.trigger('click');
+      newYear = vm.calendarYear;
+      expect(newYear).toBe(oldYear);
+    });
+  });
+
+  it('feat: click prev/next decade', () => {
+    wrapper = mount(CalendarPanel, {
       propsData: {
         value: new Date(2018, 4, 5),
+        defaultPanel: 'year',
       },
     });
     const nextBtn = wrapper.find('.mx-btn-icon-double-right');
     const lastBtn = wrapper.find('.mx-btn-icon-double-left');
-    const yearBtn = wrapper.find('.mx-btn-current-year');
-    const { vm } = wrapper;
-    const oldYear = vm.calendarYear;
-    expect(oldYear).toBe(2018);
+    const header = wrapper.find('.mx-calendar-header-label');
+    expect(header.text()).toBe('2010  2019');
     nextBtn.trigger('click');
-    let newYear = vm.calendarYear;
-    expect(newYear).toBe(2019);
-    lastBtn.trigger('click');
-    newYear = vm.calendarYear;
-    expect(newYear).toBe(oldYear);
-    // 年视图测试
-    yearBtn.trigger('click');
-    expect(vm.panel).toBe('year');
-    expect(vm.calendarDecade).toBe(2010);
-    nextBtn.trigger('click');
-    expect(vm.calendarDecade).toBe(2020);
+    expect(header.text()).toBe('2020  2029');
     lastBtn.trigger('click');
     lastBtn.trigger('click');
-    expect(vm.calendarDecade).toBe(2000);
+    expect(header.text()).toBe('2000  2009');
   });
 
   const renderType = type => {
@@ -139,7 +165,7 @@ describe('CalendarPanel', () => {
           value: new Date(2019, 9, 1, 10),
         },
       });
-      expect(wrapper.element).toMatchSnapshot();
+      expect(wrapper.vm.panel).toBe(type);
     });
   };
   ['date', 'month', 'year'].forEach(renderType);
@@ -173,6 +199,7 @@ describe('CalendarPanel', () => {
       propsData: {
         value: new Date(2019, 9, 4),
         partialUpdate: true,
+        defaultPanel: 'year',
       },
     });
     wrapper

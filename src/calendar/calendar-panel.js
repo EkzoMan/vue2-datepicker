@@ -1,102 +1,3 @@
-<template>
-  <div
-    :class="[
-      `${prefixClass}-calendar`,
-      `${prefixClass}-calendar-panel-${panel}`,
-      { [`${prefixClass}-calendar-week-mode`]: type === 'week' },
-    ]"
-  >
-    <div :class="`${prefixClass}-calendar-header`">
-      <button
-        v-show="showIconDoubleArrow"
-        type="button"
-        :class="`${prefixClass}-btn ${prefixClass}-btn-text ${prefixClass}-btn-icon-double-left`"
-        @click="handleIconDoubleLeftClick"
-      >
-        <i :class="`${prefixClass}-icon-double-left`"></i>
-      </button>
-      <button
-        v-show="showIconArrow"
-        type="button"
-        :class="`${prefixClass}-btn ${prefixClass}-btn-text ${prefixClass}-btn-icon-left`"
-        @click="handleIconLeftClick"
-      >
-        <i :class="`${prefixClass}-icon-left`"></i>
-      </button>
-      <button
-        v-show="showIconDoubleArrow"
-        type="button"
-        :class="`${prefixClass}-btn ${prefixClass}-btn-text ${prefixClass}-btn-icon-double-right`"
-        @click="handleIconDoubleRightClick"
-      >
-        <i :class="`${prefixClass}-icon-double-right`"></i>
-      </button>
-      <button
-        v-show="showIconArrow"
-        type="button"
-        :class="`${prefixClass}-btn ${prefixClass}-btn-text ${prefixClass}-btn-icon-right`"
-        @click="handleIconRightClick"
-      >
-        <i :class="`${prefixClass}-icon-right`"></i>
-      </button>
-      <span :class="`${prefixClass}-calendar-header-label`">
-        <template v-if="panel === 'year'">
-          <span>{{ calendarDecade }}</span>
-          <span :class="`${prefixClass}-calendar-decade-separator`"></span>
-          <span>{{ calendarDecade + 9 }}</span>
-        </template>
-        <button
-          v-else-if="panel === 'month'"
-          type="button"
-          :class="`${prefixClass}-btn ${prefixClass}-btn-text`"
-          @click="handelPanelChange('year')"
-        >
-          {{ calendarYear }}
-        </button>
-        <template v-else-if="panel === 'date'">
-          <button
-            v-for="item in dateHeader"
-            :key="item.panel"
-            type="button"
-            :class="
-              `${prefixClass}-btn ${prefixClass}-btn-text ${prefixClass}-btn-current-${item.panel}`
-            "
-            @click="handelPanelChange(item.panel)"
-          >
-            {{ item.label }}
-          </button>
-        </template>
-      </span>
-    </div>
-    <div :class="`${prefixClass}-calendar-content`">
-      <table-year
-        v-show="panel === 'year'"
-        :decade="calendarDecade"
-        :get-cell-classes="getYearClasses"
-        @select="handleSelectYear"
-      ></table-year>
-      <table-month
-        v-if="type !== 'year'"
-        v-show="panel === 'month'"
-        :get-cell-classes="getMonthClasses"
-        @select="handleSelectMonth"
-      ></table-month>
-      <table-date
-        v-if="type !== 'year' && type !== 'month'"
-        v-show="panel === 'date'"
-        :calendar-year="calendarYear"
-        :calendar-month="calendarMonth"
-        :title-format="titleFormat"
-        :show-week-number="typeof showWeekNumber === 'boolean' ? showWeekNumber : type === 'week'"
-        :get-cell-classes="getDateClasses"
-        :get-row-classes="getWeekState"
-        @select="handleSelectDate"
-      ></table-date>
-    </div>
-  </div>
-</template>
-
-<script>
 import {
   subMonths,
   addMonths,
@@ -108,28 +9,19 @@ import {
   startOfMonth,
   startOfDay,
 } from 'date-fns';
-import { format } from 'date-format-parse';
 import { getValidDate, isValidDate, createDate } from '../util/date';
 import TableDate from './table-date';
 import TableMonth from './table-month';
 import TableYear from './table-year';
-import { getLocale } from '../locale';
-import emitter from '../mixin/emitter';
 
 export default {
   name: 'CalendarPanel',
-  components: {
-    TableDate,
-    TableMonth,
-    TableYear,
-  },
-  mixins: [emitter],
   inject: {
-    locale: {
-      default: getLocale,
-    },
     prefixClass: {
       default: 'mx',
+    },
+    dispatchDatePicker: {
+      default: () => () => {},
     },
   },
   props: {
@@ -177,7 +69,7 @@ export default {
     const panel = index !== -1 ? panels[index] : 'date';
     return {
       panel,
-      innerCalendar: null,
+      innerCalendar: new Date(),
     };
   },
   computed: {
@@ -197,27 +89,6 @@ export default {
     calendarMonth() {
       return this.innerCalendar.getMonth();
     },
-    calendarDecade() {
-      return Math.floor(this.calendarYear / 10) * 10;
-    },
-    showIconDoubleArrow() {
-      return this.panel === 'date' || this.panel === 'month' || this.panel === 'year';
-    },
-    showIconArrow() {
-      return this.panel === 'date';
-    },
-    dateHeader() {
-      const { yearFormat, monthBeforeYear, monthFormat = 'MMM' } = this.locale;
-      const yearLabel = {
-        panel: 'year',
-        label: this.formatDate(this.innerCalendar, yearFormat),
-      };
-      const monthLabel = {
-        panel: 'month',
-        label: this.formatDate(this.innerCalendar, monthFormat),
-      };
-      return monthBeforeYear ? [monthLabel, yearLabel] : [yearLabel, monthLabel];
-    },
   },
   watch: {
     value: {
@@ -232,9 +103,6 @@ export default {
     },
   },
   methods: {
-    formatDate(date, fmt) {
-      return format(date, fmt, { locale: this.locale.formatLocale });
-    },
     initCalendar() {
       let calendarDate = this.calendar;
       if (!isValidDate(calendarDate)) {
@@ -250,37 +118,45 @@ export default {
       if (!this.isDisabled(date)) {
         this.$emit('select', date, type, this.innerValue);
         // someone need get the first selected date to set range value. (#429)
-        this.dispatch('DatePicker', 'pick', date, type);
+        this.dispatchDatePicker('pick', date, type);
       }
     },
     updateCalendar(date, type) {
       const oldValue = new Date(this.innerCalendar);
       this.innerCalendar = date;
       this.$emit('update:calendar', date);
-      this.dispatch('DatePicker', 'calendar-change', date, oldValue, type);
+      this.dispatchDatePicker('calendar-change', date, oldValue, type);
     },
     handelPanelChange(panel) {
       this.panel = panel;
     },
-    handleIconLeftClick() {
+    handleLastMonth() {
       const nextCalendar = subMonths(this.innerCalendar, 1);
       this.updateCalendar(nextCalendar, 'last-month');
     },
-    handleIconRightClick() {
+    handleNextMonth() {
       const nextCalendar = addMonths(this.innerCalendar, 1);
       this.updateCalendar(nextCalendar, 'next-month');
     },
-    handleIconDoubleLeftClick() {
-      const nextCalendar = subYears(this.innerCalendar, this.panel === 'year' ? 10 : 1);
-      this.updateCalendar(nextCalendar, this.panel === 'year' ? 'last-decade' : 'last-year');
+    handleLastYear() {
+      const nextCalendar = subYears(this.innerCalendar, 1);
+      this.updateCalendar(nextCalendar, 'last-year');
     },
-    handleIconDoubleRightClick() {
-      const nextCalendar = addYears(this.innerCalendar, this.panel === 'year' ? 10 : 1);
-      this.updateCalendar(nextCalendar, this.panel === 'year' ? 'next-decade' : 'next-year');
+    handleNextYear() {
+      const nextCalendar = addYears(this.innerCalendar, 1);
+      this.updateCalendar(nextCalendar, 'next-year');
+    },
+    handleLastDecade() {
+      const nextCalendar = subYears(this.innerCalendar, 10);
+      this.updateCalendar(nextCalendar, 'last-decade');
+    },
+    handleNextDecade() {
+      const nextCalendar = addYears(this.innerCalendar, 10);
+      this.updateCalendar(nextCalendar, 'next-decade');
     },
     handleSelectYear(year) {
       if (this.type === 'year') {
-        const date = this.getYearCellDate();
+        const date = this.getYearCellDate(year);
         this.emitDate(date, 'year');
       } else {
         const nextCalendar = setYear(this.innerCalendar, year);
@@ -335,7 +211,7 @@ export default {
         return this.calendarMonth === month ? 'active' : '';
       }
       const classes = [];
-      const cellDate = this.getMonthCellDate();
+      const cellDate = this.getMonthCellDate(month);
       classes.push(this.getStateClass(cellDate));
       return classes.concat(this.getClasses(cellDate, this.innerValue, classes.join(' ')));
     },
@@ -344,7 +220,7 @@ export default {
         return this.calendarYear === year ? 'active' : '';
       }
       const classes = [];
-      const cellDate = this.getYearCellDate();
+      const cellDate = this.getYearCellDate(year);
       classes.push(this.getStateClass(cellDate));
       return classes.concat(this.getClasses(cellDate, this.innerValue, classes.join(' ')));
     },
@@ -368,5 +244,48 @@ export default {
       return active ? `${this.prefixClass}-active-week` : '';
     },
   },
+  render() {
+    const { panel, innerCalendar } = this;
+    if (panel === 'year') {
+      return (
+        <TableYear
+          calendar={innerCalendar}
+          getCellClasses={this.getYearClasses}
+          on-select={this.handleSelectYear}
+          on-last-decade={this.handleLastDecade}
+          on-next-decade={this.handleNextDecade}
+        />
+      );
+    }
+    if (panel === 'month') {
+      return (
+        <TableMonth
+          calendar={innerCalendar}
+          getCellClasses={this.getMonthClasses}
+          on-select={this.handleSelectMonth}
+          on-change-panel={this.handelPanelChange}
+          on-last-year={this.handleLastYear}
+          on-next-year={this.handleNextYear}
+        />
+      );
+    }
+    return (
+      <TableDate
+        class={{ [`${this.prefixClass}-calendar-week-mode`]: this.type === 'week' }}
+        calendar={innerCalendar}
+        getCellClasses={this.getDateClasses}
+        getRowClasses={this.getWeekState}
+        titleFormat={this.titleFormat}
+        showWeekNumber={
+          typeof showWeekNumber === 'boolean' ? this.showWeekNumber : this.type === 'week'
+        }
+        on-select={this.handleSelectDate}
+        on-change-panel={this.handelPanelChange}
+        on-last-year={this.handleLastYear}
+        on-next-year={this.handleNextYear}
+        on-last-month={this.handleLastMonth}
+        on-next-month={this.handleNextMonth}
+      />
+    );
+  },
 };
-</script>

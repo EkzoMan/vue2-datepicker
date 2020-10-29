@@ -40,8 +40,8 @@ export default {
   name: 'ListOptions',
   components: { ScrollbarVertical },
   inject: {
-    locale: {
-      default: getLocale,
+    getLocale: {
+      default: () => getLocale,
     },
     prefixClass: {
       default: 'mx',
@@ -99,7 +99,7 @@ export default {
   },
   methods: {
     formatDate(date, fmt) {
-      return format(date, fmt, { locale: this.locale.formatLocale });
+      return format(date, fmt, { locale: this.getLocale().formatLocale });
     },
     scrollToSelected() {
       const element = this.$el.querySelector('.active');

@@ -1,6 +1,6 @@
 import { shallowMount, createWrapper, mount } from '@vue/test-utils';
 import { format, parse } from 'date-fns';
-import DatePicker from '../src/date-picker.vue';
+import DatePicker from '../src/date-picker';
 
 let wrapper;
 
@@ -191,12 +191,13 @@ describe('DatePicker', () => {
     ]);
   });
 
-  it('prop: shortcut', () => {
+  it('prop: shortcut', async () => {
     const date = new Date(2019, 4, 10);
     wrapper = shallowMount(DatePicker, {
       propsData: {
         open: true,
         valueType: 'YYYY/MM/DD',
+        range: false,
         shortcuts: [
           {
             text: 'Today',
@@ -207,7 +208,6 @@ describe('DatePicker', () => {
         ],
       },
     });
-
     const btn = wrapper.find('.mx-btn-shortcut');
     btn.trigger('click');
     const emitted = wrapper.emitted();

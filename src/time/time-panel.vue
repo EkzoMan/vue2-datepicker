@@ -47,8 +47,8 @@ export default {
   name: 'TimePanel',
   components: { ListColumns, ListOptions },
   inject: {
-    locale: {
-      default: getLocale,
+    getLocale: {
+      default: () => getLocale,
     },
     prefixClass: {
       default: 'mx',
@@ -149,7 +149,7 @@ export default {
   },
   methods: {
     formatDate(date, fmt) {
-      return format(date, fmt, { locale: this.locale.formatLocale });
+      return format(date, fmt, { locale: this.getLocale().formatLocale });
     },
     isDisabled(date) {
       return this.disabledTime(new Date(date));
