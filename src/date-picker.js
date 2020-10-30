@@ -88,9 +88,7 @@ export default {
     inputClass: {},
     inputAttr: {
       type: Object,
-      default() {
-        return {};
-      },
+      default: () => ({}),
     },
     appendToBody: {
       type: Boolean,
@@ -103,9 +101,7 @@ export default {
     popupClass: {},
     popupStyle: {
       type: Object,
-      default: () => {
-        return {};
-      },
+      default: () => ({}),
     },
     inline: {
       type: Boolean,
