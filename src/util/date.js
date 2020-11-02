@@ -30,10 +30,23 @@ export function getValidDate(value, ...backup) {
   return new Date();
 }
 
-export function assignTime(target, source) {
-  const date = new Date(target);
-  const time = new Date(source);
-  date.setHours(time.getHours(), time.getMinutes(), time.getSeconds());
+export function startOfYear(value) {
+  const date = new Date(value);
+  date.setMonth(0, 1);
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
+export function startOfMonth(value) {
+  const date = new Date(value);
+  date.setDate(1);
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
+export function startOfDay(value) {
+  const date = new Date(value);
+  date.setHours(0, 0, 0, 0);
   return date;
 }
 
@@ -60,4 +73,21 @@ export function getCalendar({ firstDayOfWeek, year, month }) {
     arr.push(createDate(year, month, lastDayInCurrentMonth + i));
   }
   return arr;
+}
+
+export function setMonth(dirtyDate, dirtyMonth) {
+  const date = new Date(dirtyDate);
+  const month = Number(dirtyMonth);
+  const year = date.getFullYear();
+  const daysInMonth = createDate(year, month + 1, 0).getDate();
+  const day = date.getDate();
+  date.setMonth(month, Math.min(day, daysInMonth));
+  return date;
+}
+
+export function assignTime(target, source) {
+  const date = new Date(target);
+  const time = new Date(source);
+  date.setHours(time.getHours(), time.getMinutes(), time.getSeconds());
+  return date;
 }

@@ -1,15 +1,12 @@
 import {
-  subMonths,
-  addMonths,
-  subYears,
-  addYears,
+  getValidDate,
+  isValidDate,
+  createDate,
   setMonth,
-  setYear,
   startOfYear,
   startOfMonth,
   startOfDay,
-} from 'date-fns';
-import { getValidDate, isValidDate, createDate } from '../util/date';
+} from '../util/date';
 import TableDate from './table-date';
 import TableMonth from './table-month';
 import TableYear from './table-year';
@@ -109,7 +106,7 @@ export default {
         const { length } = this.innerValue;
         calendarDate = getValidDate(length > 0 ? this.innerValue[length - 1] : this.defaultValue);
       }
-      this.innerCalendar = calendarDate;
+      this.innerCalendar = startOfMonth(calendarDate);
     },
     isDisabled(date) {
       return this.disabledDate(new Date(date), this.innerValue);
@@ -121,49 +118,46 @@ export default {
         this.dispatchDatePicker('pick', date, type);
       }
     },
-    updateCalendar(date, type) {
-      const oldValue = new Date(this.innerCalendar);
-      this.innerCalendar = date;
-      this.$emit('update:calendar', date);
-      this.dispatchDatePicker('calendar-change', date, oldValue, type);
+    updateCalendar(month, type) {
+      const { calendarYear, calendarMonth } = this;
+      const oldCalendar = createDate(calendarYear, calendarMonth);
+      const nextMonth = typeof month === 'function' ? month(calendarMonth) : month;
+      const nextCalendar = createDate(calendarYear, nextMonth);
+      this.innerCalendar = nextCalendar;
+      this.$emit('update:calendar', nextCalendar);
+      this.dispatchDatePicker('calendar-change', nextCalendar, oldCalendar, type);
     },
     handelPanelChange(panel) {
       this.panel = panel;
     },
     handleLastMonth() {
-      const nextCalendar = subMonths(this.innerCalendar, 1);
-      this.updateCalendar(nextCalendar, 'last-month');
+      this.updateCalendar(prevMonth => prevMonth - 1, 'last-month');
     },
     handleNextMonth() {
-      const nextCalendar = addMonths(this.innerCalendar, 1);
-      this.updateCalendar(nextCalendar, 'next-month');
+      this.updateCalendar(prevMonth => prevMonth + 1, 'next-month');
     },
     handleLastYear() {
-      const nextCalendar = subYears(this.innerCalendar, 1);
-      this.updateCalendar(nextCalendar, 'last-year');
+      this.updateCalendar(prevMonth => prevMonth - 12, 'last-year');
     },
     handleNextYear() {
-      const nextCalendar = addYears(this.innerCalendar, 1);
-      this.updateCalendar(nextCalendar, 'next-year');
+      this.updateCalendar(prevMonth => prevMonth + 12, 'next-year');
     },
     handleLastDecade() {
-      const nextCalendar = subYears(this.innerCalendar, 10);
-      this.updateCalendar(nextCalendar, 'last-decade');
+      this.updateCalendar(prevMonth => prevMonth - 120, 'last-decade');
     },
     handleNextDecade() {
-      const nextCalendar = addYears(this.innerCalendar, 10);
-      this.updateCalendar(nextCalendar, 'next-decade');
+      this.updateCalendar(prevMonth => prevMonth + 120, 'next-decade');
     },
     handleSelectYear(year) {
       if (this.type === 'year') {
         const date = this.getYearCellDate(year);
         this.emitDate(date, 'year');
       } else {
-        const nextCalendar = setYear(this.innerCalendar, year);
-        this.updateCalendar(nextCalendar, 'year');
+        this.updateCalendar(year * 12, 'year');
         this.handelPanelChange('month');
         if (this.partialUpdate && this.innerValue.length === 1) {
-          const date = setYear(this.innerValue[0], year);
+          const date = new Date(this.innerValue[0]);
+          date.setFullYear(year);
           this.emitDate(date, 'year');
         }
       }
@@ -173,12 +167,12 @@ export default {
         const date = this.getMonthCellDate(month);
         this.emitDate(date, 'month');
       } else {
-        const nextCalendar = setMonth(this.innerCalendar, month);
-        this.updateCalendar(nextCalendar, 'month');
+        this.updateCalendar(month, 'month');
         this.handelPanelChange('date');
         if (this.partialUpdate && this.innerValue.length === 1) {
-          const date = setMonth(setYear(this.innerValue[0], this.calendarYear), month);
-          this.emitDate(date, 'month');
+          const date = new Date(this.innerValue[0]);
+          date.setFullYear(this.calendarYear);
+          this.emitDate(setMonth(date, month), 'month');
         }
       }
     },

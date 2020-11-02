@@ -1,6 +1,5 @@
-import { addMonths, subMonths, differenceInCalendarMonths } from 'date-fns';
 import CalendarPanel from './calendar-panel';
-import { getValidDate, isValidDate, isValidRangeDate } from '../util/date';
+import { getValidDate, isValidDate, isValidRangeDate, startOfMonth } from '../util/date';
 
 export default {
   name: 'CalendarRange',
@@ -45,7 +44,9 @@ export default {
         this.innerValue = isValidRangeDate(this.value)
           ? this.value
           : [new Date(NaN), new Date(NaN)];
-        this.calendars = this.innerValue.map((v, i) => getValidDate(v, this.defaultValues[i]));
+        this.calendars = this.innerValue.map((v, i) =>
+          startOfMonth(getValidDate(v, this.defaultValues[i]))
+        );
         this.validateCalendars(1);
       },
     },
@@ -78,17 +79,20 @@ export default {
     validateCalendars(index) {
       const gap = this.getCalendarGap();
       if (gap) {
-        let calendar = this.calendars[index];
+        const calendar = new Date(this.calendars[index]);
         if (index === 0) {
-          calendar = subMonths(calendar, gap);
+          calendar.setMonth(calendar.getMonth() - gap);
         } else {
-          calendar = addMonths(calendar, gap);
+          calendar.setMonth(calendar.getMonth() + gap);
         }
         this.calendars.splice(index, 1, calendar);
       }
     },
     getCalendarGap() {
-      const diff = differenceInCalendarMonths(this.calendars[1], this.calendars[0]);
+      const [calendarLeft, calendarRight] = this.calendars;
+      const yearDiff = calendarRight.getFullYear() - calendarLeft.getFullYear();
+      const monthDiff = calendarRight.getMonth() - calendarLeft.getMonth();
+      const diff = yearDiff * 12 + monthDiff;
       const min = this.calendarMinDiff;
       const max = this.calendarMaxDiff;
       if (diff < min) {
